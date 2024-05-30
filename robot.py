@@ -21,6 +21,8 @@ from configuration import Config
 from constants import ChatType
 from job_mgmt import Job
 
+from my_reply import reply_private_msg, reply_group_msg
+
 __version__ = "39.0.10.1"
 
 
@@ -114,7 +116,7 @@ class Robot(Job):
         """闲聊，接入 ChatGPT
         """
         if not self.chat:  # 没接 ChatGPT，固定回复
-            rsp = "你@我干嘛？"
+            rsp = reply_private_msg(msg)  # 我的回复
         else:  # 接了 ChatGPT，智能回复
             q = re.sub(r"@.*?[\u2005|\s]", "", msg.content).replace(" ", "")
             rsp = self.chat.get_answer(q, (msg.roomid if msg.from_group() else msg.sender))
@@ -127,7 +129,7 @@ class Robot(Job):
 
             return True
         else:
-            self.LOG.error(f"无法从 ChatGPT 获得答案")
+            self.LOG.error(f"无法回答")
             return False
 
     def processMsg(self, msg: WxMsg) -> None:
@@ -155,7 +157,8 @@ class Robot(Job):
 
         # 非群聊信息，按消息类型进行处理
         if msg.type == 37:  # 好友请求
-            self.autoAcceptFriendRequest(msg)
+            # self.autoAcceptFriendRequest(msg)
+            pass
 
         elif msg.type == 10000:  # 系统信息
             self.sayHiToNewFriend(msg)
@@ -253,7 +256,7 @@ class Robot(Job):
         if nickName:
             # 添加了好友，更新好友列表
             self.allContacts[msg.sender] = nickName[0]
-            self.sendTextMsg(f"Hi {nickName[0]}，我自动通过了你的好友请求。", msg.sender)
+            self.sendTextMsg(f"Hi {nickName[0]}。", msg.sender)
 
     def newsReport(self) -> None:
         receivers = self.config.NEWS
